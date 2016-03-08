@@ -68,11 +68,11 @@ public class AuraCheck {
             } else {
                 spawnWrapper = getSpawnWrapper(this.checked.getLocation().add(2 * Math.cos(radians), 0.2, 2 * Math.sin(radians)).toVector(), plugin);
             }
-            WrapperPlayServerPlayerInfo infoWrapper = getInfoWrapper(spawnWrapper.getPlayerUuid(), PlayerInfoAction.ADD_PLAYER);
+            WrapperPlayServerPlayerInfo infoWrapper = getInfoWrapper(spawnWrapper.getPlayerUUID(), PlayerInfoAction.ADD_PLAYER);
             infoWrapper.sendPacket(this.checked);
             spawnWrapper.sendPacket(this.checked);
-            entitiesSpawned.put(spawnWrapper.getEntityId(), false);
-            WrapperPlayServerPlayerInfo RemoveinfoWrapper = getInfoWrapper(spawnWrapper.getPlayerUuid(), PlayerInfoAction.REMOVE_PLAYER);
+            entitiesSpawned.put(spawnWrapper.getEntityID(), false);
+            WrapperPlayServerPlayerInfo RemoveinfoWrapper = getInfoWrapper(spawnWrapper.getPlayerUUID(), PlayerInfoAction.REMOVE_PLAYER);
             RemoveinfoWrapper.sendPacket(this.checked);
         }
 
@@ -116,9 +116,9 @@ public class AuraCheck {
 
     public static WrapperPlayServerNamedEntitySpawn getSpawnWrapper(Vector loc, AntiAura plugin) {
         WrapperPlayServerNamedEntitySpawn wrapper = new WrapperPlayServerNamedEntitySpawn();
-        wrapper.setEntityId(AntiAura.RANDOM.nextInt(20000));
+        wrapper.setEntityID(AntiAura.RANDOM.nextInt(20000));
         wrapper.setPosition(loc);
-        wrapper.setPlayerUuid(UUID.randomUUID());
+        wrapper.setPlayerUUID(UUID.randomUUID());
         wrapper.setYaw(0.0F);
         wrapper.setPitch(-45.0F);
         WrappedDataWatcher watcher = new WrappedDataWatcher();
