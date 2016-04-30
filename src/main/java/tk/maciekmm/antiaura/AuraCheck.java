@@ -30,6 +30,7 @@ import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.material.FlowerPot;
 import org.bukkit.util.Vector;
 
 import java.util.AbstractMap;
@@ -121,10 +122,15 @@ public class AuraCheck {
         wrapper.setPlayerUUID(UUID.randomUUID());
         wrapper.setYaw(0.0F);
         wrapper.setPitch(-45.0F);
+        WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+        WrappedDataWatcher.Serializer floatSerializer = WrappedDataWatcher.Registry.get(Float.class);
+        WrappedDataWatcher.WrappedDataWatcherObject object = new WrappedDataWatcher.WrappedDataWatcherObject(0, serializer);
+        WrappedDataWatcher.WrappedDataWatcherObject object2 = new WrappedDataWatcher.WrappedDataWatcherObject(11, serializer);
+        WrappedDataWatcher.WrappedDataWatcherObject floatObject = new WrappedDataWatcher.WrappedDataWatcherObject(6, floatSerializer);
         WrappedDataWatcher watcher = new WrappedDataWatcher();
-        watcher.setObject(0, plugin.getConfig().getBoolean("invisibility", false) ? (byte) 0x20 : (byte) 0);
-        watcher.setObject(6, 0.5F);
-        watcher.setObject(11, (byte) 1);
+        watcher.setObject(object, plugin.getConfig().getBoolean("invisibility", false) ? (byte) 0x20 : (byte) 0);
+        watcher.setObject(floatObject, 0.5F);
+        watcher.setObject(object2, (byte) 1);
         wrapper.setMetadata(watcher);
         return wrapper;
     }
