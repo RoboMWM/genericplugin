@@ -48,6 +48,12 @@ public class AuraCheck {
     private long started;
     private long finished = Long.MAX_VALUE;
 
+    //TODO: [13:10:07] ~Techcable: and correctly named\
+    static WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+    static WrappedDataWatcher.Serializer floatSerializer = WrappedDataWatcher.Registry.get(Float.class);
+    static WrappedDataWatcher.WrappedDataWatcherObject object = new WrappedDataWatcher.WrappedDataWatcherObject(0, serializer);
+    static WrappedDataWatcher.WrappedDataWatcherObject object2 = new WrappedDataWatcher.WrappedDataWatcherObject(11, serializer);
+    static WrappedDataWatcher.WrappedDataWatcherObject floatObject = new WrappedDataWatcher.WrappedDataWatcherObject(6, floatSerializer);
 
     public AuraCheck(AntiAura plugin, Player checked) {
         this.plugin = plugin;
@@ -121,11 +127,6 @@ public class AuraCheck {
         wrapper.setPlayerUUID(UUID.randomUUID());
         wrapper.setYaw(0.0F);
         wrapper.setPitch(-45.0F);
-        WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
-        WrappedDataWatcher.Serializer floatSerializer = WrappedDataWatcher.Registry.get(Float.class);
-        WrappedDataWatcher.WrappedDataWatcherObject object = new WrappedDataWatcher.WrappedDataWatcherObject(0, serializer);
-        WrappedDataWatcher.WrappedDataWatcherObject object2 = new WrappedDataWatcher.WrappedDataWatcherObject(11, serializer);
-        WrappedDataWatcher.WrappedDataWatcherObject floatObject = new WrappedDataWatcher.WrappedDataWatcherObject(6, floatSerializer);
         WrappedDataWatcher watcher = new WrappedDataWatcher();
         watcher.setObject(object, plugin.getConfig().getBoolean("invisibility", false) ? (byte) 0x20 : (byte) 0);
         watcher.setObject(floatObject, 0.5F);
