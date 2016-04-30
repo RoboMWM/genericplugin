@@ -1,3 +1,1 @@
-AntiAura (checkaura) is a simple plugin that allows you to check if someone has killaura.
-
-It needs ProtocolLib as dependency.
+hi thanks for visiting you stalker now please go away go view another project of mine
