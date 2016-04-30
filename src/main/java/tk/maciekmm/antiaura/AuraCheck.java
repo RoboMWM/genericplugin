@@ -30,7 +30,6 @@ import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.material.FlowerPot;
 import org.bukkit.util.Vector;
 
 import java.util.AbstractMap;
