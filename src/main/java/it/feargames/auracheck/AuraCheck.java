@@ -15,139 +15,163 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 package it.feargames.auracheck;
 
-import com.comphenix.packetwrapper.WrapperPlayServerEntityDestroy;
-import com.comphenix.packetwrapper.WrapperPlayServerNamedEntitySpawn;
-import com.comphenix.packetwrapper.WrapperPlayServerPlayerInfo;
-import com.comphenix.protocol.wrappers.EnumWrappers.NativeGameMode;
-import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction;
-import com.comphenix.protocol.wrappers.PlayerInfoData;
+import com.comphenix.packetwrapper.WrapperPlayClientUseEntity;
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.wrappers.EnumWrappers.EntityUseAction;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedDataWatcher;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.lang.reflect.InvocationTargetException;
+import java.text.NumberFormat;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 
-public class AuraCheck {
-    private final AntiAura plugin;
-    private Map<Integer, Boolean> entitiesSpawned = new HashMap<>();
-    private CommandSender invoker;
-    private Player checked;
-    private long started;
-    private long finished = Long.MAX_VALUE;
+public class AuraCheck extends JavaPlugin implements Listener {
 
-    public AuraCheck(AntiAura plugin, Player checked) {
-        this.plugin = plugin;
-        this.checked = checked;
+    private static final NumberFormat NUMBER_FORMAT;
+
+    static {
+        NUMBER_FORMAT = NumberFormat.getInstance();
+        NUMBER_FORMAT.setMaximumIntegerDigits(Integer.MAX_VALUE);
+        NUMBER_FORMAT.setMinimumIntegerDigits(1);
+        NUMBER_FORMAT.setMaximumFractionDigits(2);
+        NUMBER_FORMAT.setMinimumFractionDigits(1);
     }
 
-    public void invoke(CommandSender player, final Callback callback) {
-        this.invoker = player;
-        this.started = System.currentTimeMillis();
+    private HashMap<UUID, Checker> running = new HashMap<>();
+    private boolean isRegistered;
+    public static final Random RANDOM = new Random();
 
-        int numPlayers = plugin.getConfig().getInt("amountOfFakePlayers");
-        for (int i = 1; i <= numPlayers; i++) {
-            int degrees = 360 / (numPlayers - 1) * i;
-            double radians = Math.toRadians(degrees);
-            WrapperPlayServerNamedEntitySpawn spawnWrapper;
-            if (i == 1) {
-                spawnWrapper = getSpawnWrapper(this.checked.getLocation().add(0, 2, 0).toVector(), plugin);
-            } else {
-                spawnWrapper = getSpawnWrapper(this.checked.getLocation().add(2 * Math.cos(radians), 0.2, 2 * Math.sin(radians)).toVector(), plugin);
+    @Override
+    public void onEnable() {
+        this.saveDefaultConfig();
+        this.getServer().getPluginManager().registerEvents(this, this);
+    }
+
+    public void register() {
+        ProtocolLibrary.getProtocolManager().addPacketListener(
+                new PacketAdapter(this, WrapperPlayClientUseEntity.TYPE) {
+                    @Override
+                    public void onPacketReceiving(PacketEvent event) {
+                        if (event.getPacketType() == WrapperPlayClientUseEntity.TYPE) {
+                            WrapperPlayClientUseEntity packet = new WrapperPlayClientUseEntity(event.getPacket());
+                            int entID = packet.getTarget();
+                            if (running.containsKey(event.getPlayer().getUniqueId()) && packet.getType() == EntityUseAction.ATTACK) {
+                                running.get(event.getPlayer().getUniqueId()).markAsKilled(entID);
+                            }
+                        }
+                    }
+
+                });
+        this.isRegistered = true;
+    }
+
+    public void unregister() {
+        ProtocolLibrary.getProtocolManager().removePacketListeners(this);
+        this.isRegistered = false;
+    }
+
+    public Checker remove(UUID id) {
+        if (this.running.containsKey(id)) {
+
+            if (running.size() == 1) {
+                this.unregister();
             }
-            WrapperPlayServerPlayerInfo infoWrapper = getInfoWrapper(spawnWrapper.getPlayerUUID(), PlayerInfoAction.ADD_PLAYER);
-            infoWrapper.sendPacket(this.checked);
-            spawnWrapper.sendPacket(this.checked);
-            entitiesSpawned.put(spawnWrapper.getEntityID(), false);
-            WrapperPlayServerPlayerInfo RemoveinfoWrapper = getInfoWrapper(spawnWrapper.getPlayerUUID(), PlayerInfoAction.REMOVE_PLAYER);
-            RemoveinfoWrapper.sendPacket(this.checked);
+
+            return this.running.remove(id);
+        }
+        return null;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length < 1) {
+            return false;
+        }
+        if (args[0].equalsIgnoreCase("reload")) {
+            this.reloadConfig();
+            sender.sendMessage(ChatColor.GREEN + "AntiAura config successfully reloaded");
+            return true;
         }
 
+        @SuppressWarnings("deprecation")
+        List<Player> playerList = Bukkit.matchPlayer(args[0]);
+        Player player;
+        if (playerList.isEmpty()) {
+            sender.sendMessage(ChatColor.RED + "Player is not online.");
+            return true;
+        } else if (playerList.size() == 1) {
+            player = playerList.get(0);
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("[\"\",{\"text\":\"What player do you mean? (click one)\\n\",\"color\":\"green\"},");
+            for (Player p : playerList) {
+                stringBuilder.append("{\"text\":\"").append(p.getName()).append(", \",\"color\":\"blue\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/auracheck ").append(p.getName()).append("\"},\"hoverEvent\":{\"action\":\"show_text\",\"value\":{\"text\":\"\",\"extra\":[{\"text\":\"").append(p.getName()).append("\",\"color\":\"dark_purple\"}]}}},");
+            }
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            stringBuilder.append("]");
+            String json = stringBuilder.toString();
+            PacketContainer packet = new PacketContainer(PacketType.Play.Server.CHAT);
+            packet.getChatComponents().write(0, WrappedChatComponent.fromJson(json));
+            try {
+                ProtocolLibrary.getProtocolManager().sendServerPacket((Player) sender, packet);
+            } catch (InvocationTargetException e) {
+            }
+            return true;
+        }
+        if (player == null) {
+            sender.sendMessage(ChatColor.RED + "Player is not online.");
+            return true;
+        }
 
-        Bukkit.getScheduler().runTaskLater(this.plugin, new Runnable() {
+        if (!isRegistered) {
+            this.register();
+        }
+
+        Checker check = new Checker(this, player);
+        running.put(player.getUniqueId(), check);
+
+        check.invoke(sender, new Checker.Callback() {
             @Override
-            public void run() {
-                AbstractMap.SimpleEntry<Integer, Integer> result = end();
-                plugin.remove(checked.getUniqueId());
-                callback.done(started, finished, result, invoker, checked);
+            public void done(long started, long finished, AbstractMap.SimpleEntry<Integer, Integer> result, CommandSender invoker, Player target) {
+                if (invoker instanceof Player && !((Player) invoker).isOnline()) {
+                    return;
+                }
+                invoker.sendMessage(ChatColor.DARK_PURPLE + "Aura check result for " + target.getName() + ": killed " + result.getKey() + " out of " + result.getValue());
+                if (result.getKey() >= 2)
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "failaura " + target.getName());
+                double timeTaken = finished != Long.MAX_VALUE ? ((double) (finished - started)) / 1000D : ((double) getConfig().getInt("ticksToKill", 10)) / 20D;
+                invoker.sendMessage(ChatColor.DARK_PURPLE + "Check length: " + NUMBER_FORMAT.format(timeTaken) + " seconds.");
             }
-        }, plugin.getConfig().getInt("ticksToKill", 10));
+        });
+        return true;
     }
 
-    public void markAsKilled(Integer val) {
-        if (entitiesSpawned.containsKey(val)) {
-            entitiesSpawned.put(val, true);
-            kill(val).sendPacket(checked);
-        }
-
-        if (!entitiesSpawned.containsValue(false)) {
-            this.finished = System.currentTimeMillis();
+    @EventHandler
+    public void onDisconnect(PlayerQuitEvent event) {
+        Checker check = this.remove(event.getPlayer().getUniqueId());
+        if (check != null) {
+            check.end();
         }
     }
-
-    public AbstractMap.SimpleEntry<Integer, Integer> end() {
-        int killed = 0;
-        for (Map.Entry<Integer, Boolean> entry : entitiesSpawned.entrySet()) {
-            if (entry.getValue()) {
-                killed++;
-            } else if (checked.isOnline()) {
-                kill(entry.getKey()).sendPacket(checked);
-            }
-
-        }
-        int amount = entitiesSpawned.size();
-        entitiesSpawned.clear();
-        return new AbstractMap.SimpleEntry<>(killed, amount);
-
-    }
-
-    public static WrapperPlayServerNamedEntitySpawn getSpawnWrapper(Vector loc, AntiAura plugin) {
-        WrapperPlayServerNamedEntitySpawn wrapper = new WrapperPlayServerNamedEntitySpawn();
-        wrapper.setEntityID(AntiAura.RANDOM.nextInt(20000));
-        wrapper.setPosition(loc);
-        wrapper.setPlayerUUID(UUID.randomUUID());
-        wrapper.setYaw(0.0F);
-        wrapper.setPitch(-45.0F);
-        WrappedDataWatcher watcher = new WrappedDataWatcher();
-        watcher.setObject(0, plugin.getConfig().getBoolean("invisibility", false) ? (byte) 0x20 : (byte) 0);
-        watcher.setObject(6, 0.5F);
-        watcher.setObject(11, (byte) 1);
-        wrapper.setMetadata(watcher);
-        return wrapper;
-    }
-
-
-    public static WrapperPlayServerPlayerInfo getInfoWrapper(UUID playeruuid, PlayerInfoAction action) {
-        WrapperPlayServerPlayerInfo wrapper = new WrapperPlayServerPlayerInfo();
-        wrapper.setAction(action);
-        WrappedGameProfile profile = new WrappedGameProfile(playeruuid, NameGenerator.newName());
-        PlayerInfoData data = new PlayerInfoData(profile, 1, NativeGameMode.SURVIVAL, WrappedChatComponent.fromText(NameGenerator.newName()));
-        List<PlayerInfoData> listdata = new ArrayList<>();
-        listdata.add(data);
-        wrapper.setData(listdata);
-        return wrapper;
-    }
-
-    public static WrapperPlayServerEntityDestroy kill(int entity) {
-        WrapperPlayServerEntityDestroy wrapper = new WrapperPlayServerEntityDestroy();
-        wrapper.setEntityIds(new int[]{entity});
-        return wrapper;
-    }
-
-    public interface Callback {
-        public void done(long started, long finished, AbstractMap.SimpleEntry<Integer, Integer> result, CommandSender invoker, Player target);
-    }
-
 }
