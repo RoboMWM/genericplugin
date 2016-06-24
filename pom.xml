@@ -1,16 +1,26 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>antiaura</artifactId>
-    <version>0.5</version>
-    <groupId>tk.maciekmm</groupId>
-    <name>AntiAura</name>
-    <description>Simple aura hack checker.</description>
-    <url>http://maciekmm.net</url>
-    <packaging>jar</packaging>
+
+    <groupId>it.feargames</groupId>
+    <artifactId>auracheck</artifactId>
+    <version>0.6-SNAPSHOT</version>
+
+    <name>AuraCheck</name>
+    <description>Simple killaura hack checker.</description>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/sgdc3/AuraCheck/issues</url>
+    </issueManagement>
 
     <properties>
-        <main.class>tk.maciekmm.antiaura.AntiAura</main.class>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.jdkVersion>1.7</project.jdkVersion>
+        <project.main>${project.groupId}.${project.artifactId}.${project.name}</project.main>
+        <project.authors>maciekmm, RoboMWM, sgdc3</project.authors>
     </properties>
 
     <repositories>
@@ -19,8 +29,8 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
-            <id>shadowvolt-repo</id>
-            <url>http://ci.shadowvolt.com/plugin/repository/everything/</url>
+            <id>dmulloy2-repo</id>
+            <url>http://repo.dmulloy2.net/content/groups/public/</url>
         </repository>
     </repositories>
 
@@ -28,13 +38,21 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.9.2-R0.1-SNAPSHOT</version>
+            <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
-            <version>3.7.0-BETA</version>
+            <version>3.6.6-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- RELOCATE ME! -->
+        <dependency>
+            <groupId>com.comphenix.packetwrapper</groupId>
+            <artifactId>PacketWrapper</artifactId>
+            <version>1.8.7-R0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -43,17 +61,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
+                <version>3.5.1</version>
                 <configuration>
-                    <source>7</source>
-                    <target>7</target>
+                    <source>${project.jdkVersion}</source>
+                    <target>${project.jdkVersion}</target>
                 </configuration>
             </plugin>
         </plugins>
         <resources>
             <resource>
                 <filtering>true</filtering>
-                <directory>${basedir}/src/main/resources/</directory>
+                <directory>src/main/resources/</directory>
             </resource>
         </resources>
     </build>

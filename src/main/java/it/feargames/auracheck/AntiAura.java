@@ -16,7 +16,7 @@
  */
 
 
-package tk.maciekmm.antiaura;
+package it.feargames.auracheck;
 
 import com.comphenix.packetwrapper.WrapperPlayClientUseEntity;
 import com.comphenix.protocol.PacketType;
