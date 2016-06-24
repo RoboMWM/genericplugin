@@ -113,6 +113,27 @@
                     <target>${project.jdkVersion}</target>
                 </configuration>
             </plugin>
+	        <plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-shade-plugin</artifactId>
+	            <version>2.4.3</version>
+	            <executions>
+	                <execution>
+	                    <phase>package</phase>
+	                    <goals>
+	                        <goal>shade</goal>
+	                    </goals>
+	                </execution>
+	            </executions>
+	            <configuration>
+	                <relocations>
+	                    <relocation>
+	                        <pattern>com.comphenix.packetwrapper</pattern>
+	                        <shadedPattern>it.feargames.auracheck.libs.packetwrapper</shadedPattern>
+	                    </relocation>
+	                </relocations>
+	            </configuration>
+	        </plugin>
         </plugins>
         <resources>
             <resource>
