@@ -16,7 +16,7 @@
  */
 
 
-package tk.maciekmm.antiaura;
+package it.feargames.auracheck;
 
 import com.comphenix.packetwrapper.WrapperPlayClientUseEntity;
 import com.comphenix.protocol.PacketType;
@@ -46,7 +46,7 @@ import java.util.Random;
 import java.util.UUID;
 
 
-public class AntiAura extends JavaPlugin implements Listener {
+public class AuraCheck extends JavaPlugin implements Listener {
 
     private static final NumberFormat NUMBER_FORMAT;
 
@@ -58,7 +58,7 @@ public class AntiAura extends JavaPlugin implements Listener {
         NUMBER_FORMAT.setMinimumFractionDigits(1);
     }
 
-    private HashMap<UUID, AuraCheck> running = new HashMap<>();
+    private HashMap<UUID, Checker> running = new HashMap<>();
     private boolean isRegistered;
     public static final Random RANDOM = new Random();
 
@@ -91,7 +91,7 @@ public class AntiAura extends JavaPlugin implements Listener {
         this.isRegistered = false;
     }
 
-    public AuraCheck remove(UUID id) {
+    public Checker remove(UUID id) {
         if (this.running.containsKey(id)) {
 
             if (running.size() == 1) {
@@ -111,6 +111,34 @@ public class AntiAura extends JavaPlugin implements Listener {
         if (args[0].equalsIgnoreCase("reload")) {
             this.reloadConfig();
             sender.sendMessage(ChatColor.GREEN + "AntiAura config successfully reloaded");
+            return true;
+        }
+
+        if(args[0].equals("*")) {
+            if (!isRegistered) {
+                this.register();
+            }
+
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                Checker check = new Checker(this, player);
+                running.put(player.getUniqueId(), check);
+
+                check.invoke(sender, new Checker.Callback() {
+                    @Override
+                    public void done(long started, long finished, AbstractMap.SimpleEntry<Integer, Integer> result, CommandSender invoker, Player target) {
+                        if (invoker instanceof Player && !((Player) invoker).isOnline()) {
+                            return;
+                        }
+                        if (result.getKey() >= getConfig().getInt("commandTrigger")) {
+                            String command = getConfig().getString("command").replaceAll("%p", target.getName());
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                            invoker.sendMessage(ChatColor.RED + target.getName() + " have been kicked from the server! " + "Killed " + result.getKey() + " out of " + result.getValue());
+                        } else if (result.getKey() >= 1) {
+                            invoker.sendMessage(ChatColor.DARK_PURPLE + target.getName() + " has killed " + result.getKey() + " out of " + result.getValue());
+                        }
+                    }
+                });
+            }
             return true;
         }
 
@@ -148,18 +176,20 @@ public class AntiAura extends JavaPlugin implements Listener {
             this.register();
         }
 
-        AuraCheck check = new AuraCheck(this, player);
+        Checker check = new Checker(this, player);
         running.put(player.getUniqueId(), check);
 
-        check.invoke(sender, new AuraCheck.Callback() {
+        check.invoke(sender, new Checker.Callback() {
             @Override
             public void done(long started, long finished, AbstractMap.SimpleEntry<Integer, Integer> result, CommandSender invoker, Player target) {
                 if (invoker instanceof Player && !((Player) invoker).isOnline()) {
                     return;
                 }
                 invoker.sendMessage(ChatColor.DARK_PURPLE + "Aura check result for " + target.getName() + ": killed " + result.getKey() + " out of " + result.getValue());
-                if (result.getKey() >= 2)
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "failaura " + target.getName());
+                if (result.getKey() >= getConfig().getInt("commandTrigger")) {
+                    String command = getConfig().getString("command").replaceAll("%p", target.getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                }
                 double timeTaken = finished != Long.MAX_VALUE ? ((double) (finished - started)) / 1000D : ((double) getConfig().getInt("ticksToKill", 10)) / 20D;
                 invoker.sendMessage(ChatColor.DARK_PURPLE + "Check length: " + NUMBER_FORMAT.format(timeTaken) + " seconds.");
             }
@@ -169,7 +199,7 @@ public class AntiAura extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onDisconnect(PlayerQuitEvent event) {
-        AuraCheck check = this.remove(event.getPlayer().getUniqueId());
+        Checker check = this.remove(event.getPlayer().getUniqueId());
         if (check != null) {
             check.end();
         }

@@ -1,13 +1,12 @@
 name: ${project.name}
 version: ${project.version}
 description: ${project.description}
-author: maciekmm
-website: ${project.url}
-main: ${main.class}
+author: ${project.authors}
+main: ${project.main}
 depend: [ProtocolLib]
 commands:
   auracheck:
-    description: Check if player has aura hack
-    usage: /<command> <username> - checks for aura hack
+    description: Check if player has killaura hack
+    usage: /<command> <username> - checks for killaura hack
     aliases: [ac]
     permission: auracheck.check

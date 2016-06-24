@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package tk.maciekmm.antiaura;
+package it.feargames.auracheck;
 
 import com.comphenix.packetwrapper.WrapperPlayServerEntityDestroy;
 import com.comphenix.packetwrapper.WrapperPlayServerNamedEntitySpawn;
@@ -40,22 +40,22 @@ import java.util.Map;
 import java.util.UUID;
 
 
-public class AuraCheck {
-    private final AntiAura plugin;
+public class Checker {
+    private final AuraCheck plugin;
     private Map<Integer, Boolean> entitiesSpawned = new HashMap<>();
     private CommandSender invoker;
     private Player checked;
     private long started;
     private long finished = Long.MAX_VALUE;
 
-    //TODO: [13:10:07] ~Techcable: and correctly named\
+    //TODO: [13:10:07] ~Techcable: and correctly named
     static WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
     static WrappedDataWatcher.Serializer floatSerializer = WrappedDataWatcher.Registry.get(Float.class);
     static WrappedDataWatcher.WrappedDataWatcherObject object = new WrappedDataWatcher.WrappedDataWatcherObject(0, serializer);
     static WrappedDataWatcher.WrappedDataWatcherObject object2 = new WrappedDataWatcher.WrappedDataWatcherObject(11, serializer);
     static WrappedDataWatcher.WrappedDataWatcherObject floatObject = new WrappedDataWatcher.WrappedDataWatcherObject(6, floatSerializer);
 
-    public AuraCheck(AntiAura plugin, Player checked) {
+    public Checker(AuraCheck plugin, Player checked) {
         this.plugin = plugin;
         this.checked = checked;
     }
@@ -120,9 +120,9 @@ public class AuraCheck {
 
     }
 
-    public static WrapperPlayServerNamedEntitySpawn getSpawnWrapper(Vector loc, AntiAura plugin) {
+    public static WrapperPlayServerNamedEntitySpawn getSpawnWrapper(Vector loc, AuraCheck plugin) {
         WrapperPlayServerNamedEntitySpawn wrapper = new WrapperPlayServerNamedEntitySpawn();
-        wrapper.setEntityID(AntiAura.RANDOM.nextInt(20000));
+        wrapper.setEntityID(AuraCheck.RANDOM.nextInt(20000));
         wrapper.setPosition(loc);
         wrapper.setPlayerUUID(UUID.randomUUID());
         wrapper.setYaw(0.0F);
