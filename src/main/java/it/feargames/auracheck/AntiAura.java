@@ -75,7 +75,7 @@ public class AntiAura extends JavaPlugin implements Listener {
                     public void onPacketReceiving(PacketEvent event) {
                         if (event.getPacketType() == WrapperPlayClientUseEntity.TYPE) {
                             WrapperPlayClientUseEntity packet = new WrapperPlayClientUseEntity(event.getPacket());
-                            int entID = packet.getTargetID();
+                            int entID = packet.getTarget();
                             if (running.containsKey(event.getPlayer().getUniqueId()) && packet.getType() == EntityUseAction.ATTACK) {
                                 running.get(event.getPlayer().getUniqueId()).markAsKilled(entID);
                             }
