@@ -1,3 +1,5 @@
 ticksToKill: 10
 amountOfFakePlayers: 4
 invisibility: false
+commandTrigger: 3
+command: "kick %p Don't use hacks!"

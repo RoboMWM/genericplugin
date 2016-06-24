@@ -114,6 +114,34 @@ public class AuraCheck extends JavaPlugin implements Listener {
             return true;
         }
 
+        if(args[0].equals("*")) {
+            if (!isRegistered) {
+                this.register();
+            }
+
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                Checker check = new Checker(this, player);
+                running.put(player.getUniqueId(), check);
+
+                check.invoke(sender, new Checker.Callback() {
+                    @Override
+                    public void done(long started, long finished, AbstractMap.SimpleEntry<Integer, Integer> result, CommandSender invoker, Player target) {
+                        if (invoker instanceof Player && !((Player) invoker).isOnline()) {
+                            return;
+                        }
+                        if (result.getKey() >= getConfig().getInt("commandTrigger")) {
+                            String command = getConfig().getString("command").replaceAll("%p", target.getName());
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                            invoker.sendMessage(ChatColor.RED + target.getName() + " have been kicked from the server! " + "Killed " + result.getKey() + " out of " + result.getValue());
+                        } else if (result.getKey() >= 1) {
+                            invoker.sendMessage(ChatColor.DARK_PURPLE + target.getName() + " has killed " + result.getKey() + " out of " + result.getValue());
+                        }
+                    }
+                });
+            }
+            return true;
+        }
+
         @SuppressWarnings("deprecation")
         List<Player> playerList = Bukkit.matchPlayer(args[0]);
         Player player;
@@ -158,8 +186,10 @@ public class AuraCheck extends JavaPlugin implements Listener {
                     return;
                 }
                 invoker.sendMessage(ChatColor.DARK_PURPLE + "Aura check result for " + target.getName() + ": killed " + result.getKey() + " out of " + result.getValue());
-                if (result.getKey() >= 2)
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "failaura " + target.getName());
+                if (result.getKey() >= getConfig().getInt("commandTrigger")) {
+                    String command = getConfig().getString("command").replaceAll("%p", target.getName());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                }
                 double timeTaken = finished != Long.MAX_VALUE ? ((double) (finished - started)) / 1000D : ((double) getConfig().getInt("ticksToKill", 10)) / 20D;
                 invoker.sendMessage(ChatColor.DARK_PURPLE + "Check length: " + NUMBER_FORMAT.format(timeTaken) + " seconds.");
             }
