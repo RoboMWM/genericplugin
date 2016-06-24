@@ -48,6 +48,13 @@ public class Checker {
     private long started;
     private long finished = Long.MAX_VALUE;
 
+    //TODO: [13:10:07] ~Techcable: and correctly named
+    static WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+    static WrappedDataWatcher.Serializer floatSerializer = WrappedDataWatcher.Registry.get(Float.class);
+    static WrappedDataWatcher.WrappedDataWatcherObject object = new WrappedDataWatcher.WrappedDataWatcherObject(0, serializer);
+    static WrappedDataWatcher.WrappedDataWatcherObject object2 = new WrappedDataWatcher.WrappedDataWatcherObject(11, serializer);
+    static WrappedDataWatcher.WrappedDataWatcherObject floatObject = new WrappedDataWatcher.WrappedDataWatcherObject(6, floatSerializer);
+
     public Checker(AuraCheck plugin, Player checked) {
         this.plugin = plugin;
         this.checked = checked;
@@ -121,9 +128,9 @@ public class Checker {
         wrapper.setYaw(0.0F);
         wrapper.setPitch(-45.0F);
         WrappedDataWatcher watcher = new WrappedDataWatcher();
-        watcher.setObject(0, plugin.getConfig().getBoolean("invisibility", false) ? (byte) 0x20 : (byte) 0);
-        watcher.setObject(6, 0.5F);
-        watcher.setObject(11, (byte) 1);
+        watcher.setObject(object, plugin.getConfig().getBoolean("invisibility", false) ? (byte) 0x20 : (byte) 0);
+        watcher.setObject(floatObject, 0.5F);
+        watcher.setObject(object2, (byte) 1);
         wrapper.setMetadata(watcher);
         return wrapper;
     }
